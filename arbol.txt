@@ -12,6 +12,13 @@ C:.
 ¦       ¦   index.html
 ¦       ¦   
 ¦       +---jsp
+¦       ¦       crearTratamiento.jsp
+¦       ¦       editarTratamiento.jsp
+¦       ¦       listarTratamientos.jsp
+¦       ¦       resultadoExistencia.jsp
+¦       ¦       tratamientoNoEncontrado.jsp
+¦       ¦       verTratamiento.jsp
+¦       ¦       
 ¦       +---META-INF
 ¦       ¦       context.xml
 ¦       ¦       MANIFEST.MF
@@ -28,22 +35,32 @@ C:.
 ¦               ¦   ¦   TratamientoDaoPostgre.class
 ¦               ¦   ¦   
 ¦               ¦   +---conexion
-¦               ¦           DatabaConnetion.class
+¦               ¦           DatabaseConnection.class
 ¦               ¦           MongoConnection.class
 ¦               ¦           MysqlConnection.class
 ¦               ¦           PostgreConnection.class
 ¦               ¦           
 ¦               +---dto
+¦               ¦       EntidadDeSaludDto.class
 ¦               ¦       TratamientoDto.class
+¦               ¦       UsuarioDto.class
 ¦               ¦       
+¦               +---EntidadDeSalud
 ¦               +---external
+¦               ¦       EntidadDeSaludConsumer.class
+¦               ¦       
 ¦               +---facade
 ¦               +---factory
+¦               ¦       DatabaseConnectionFactory.class
+¦               ¦       TratamientoDaoFactory.class
+¦               ¦       
 ¦               +---mapper
 ¦               ¦       TratamientoMapper.class
 ¦               ¦       
 ¦               +---modelo
+¦               ¦       EntidadDeSalud.class
 ¦               ¦       Tratamiento.class
+¦               ¦       Usuario.class
 ¦               ¦       
 ¦               +---presentacion
 ¦               ¦       TratamientoServlet.class
@@ -54,7 +71,11 @@ C:.
 ¦               ¦       
 ¦               +---servicio
 ¦                   +---service
+¦                   ¦       TratamientoService.class
+¦                   ¦       
 ¦                   +---serviceImpl
+¦                           TratamientoServiceImpl.class
+¦                           
 +---nbproject
 ¦   ¦   ant-deploy.xml
 ¦   ¦   build-impl.xml
@@ -77,37 +98,56 @@ C:.
 ¦       ¦   ¦   TratamientoDaoPostgre.java
 ¦       ¦   ¦   
 ¦       ¦   +---conexion
-¦       ¦           DatabaConnetion.java
+¦       ¦           DatabaseConnection.java
 ¦       ¦           MongoConnection.java
 ¦       ¦           MysqlConnection.java
 ¦       ¦           PostgreConnection.java
 ¦       ¦           
 ¦       +---dto
+¦       ¦       EntidadDeSaludDto.java
 ¦       ¦       TratamientoDto.java
+¦       ¦       UsuarioDto.java
 ¦       ¦       
 ¦       +---external
-¦       +---facade
+¦       ¦       EntidadDeSaludConsumer.java
+¦       ¦       
 ¦       +---factory
+¦       ¦       DatabaseConnectionFactory.java
+¦       ¦       TratamientoDaoFactory.java
+¦       ¦       
 ¦       +---mapper
 ¦       ¦       TratamientoMapper.java
 ¦       ¦       
 ¦       +---modelo
+¦       ¦       EntidadDeSalud.java
 ¦       ¦       Tratamiento.java
+¦       ¦       Usuario.java
 ¦       ¦       
 ¦       +---presentacion
 ¦       ¦       TratamientoServlet.java
 ¦       ¦       
-¦       +---prototype
 ¦       +---repositorio
 ¦       ¦       TratamientoRepository.java
 ¦       ¦       
 ¦       +---servicio
 ¦           +---service
+¦           ¦       TratamientoService.java
+¦           ¦       
 ¦           +---serviceImpl
+¦                   TratamientoServiceImpl.java
+¦                   
++---test
 +---web
     ¦   index.html
     ¦   
     +---jsp
+    ¦       crearTratamiento.jsp
+    ¦       editarTratamiento.jsp
+    ¦       listarTratamientos.jsp
+    ¦       resultadoExistencia.jsp
+    ¦       tratamientoNoEncontrado.jsp
+    ¦       verTratamiento.jsp
+    ¦       
     +---META-INF
     ¦       context.xml
     ¦       
