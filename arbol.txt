@@ -1,0 +1,114 @@
+Listado de rutas de carpetas
+El número de serie del volumen es 6CBA-E373
+C:.
+¦   arbol.txt
+¦   build.xml
+¦   
++---build
+¦   +---empty
+¦   +---generated-sources
+¦   ¦   +---ap-source-output
+¦   +---web
+¦       ¦   index.html
+¦       ¦   
+¦       +---jsp
+¦       +---META-INF
+¦       ¦       context.xml
+¦       ¦       MANIFEST.MF
+¦       ¦       
+¦       +---WEB-INF
+¦           +---classes
+¦               ¦   .netbeans_automatic_build
+¦               ¦   .netbeans_update_resources
+¦               ¦   
+¦               +---dao
+¦               ¦   ¦   TratamientoDao.class
+¦               ¦   ¦   TratamientoDaoMongo.class
+¦               ¦   ¦   TratamientoDaoMysql.class
+¦               ¦   ¦   TratamientoDaoPostgre.class
+¦               ¦   ¦   
+¦               ¦   +---conexion
+¦               ¦           DatabaConnetion.class
+¦               ¦           MongoConnection.class
+¦               ¦           MysqlConnection.class
+¦               ¦           PostgreConnection.class
+¦               ¦           
+¦               +---dto
+¦               ¦       TratamientoDto.class
+¦               ¦       
+¦               +---external
+¦               +---facade
+¦               +---factory
+¦               +---mapper
+¦               ¦       TratamientoMapper.class
+¦               ¦       
+¦               +---modelo
+¦               ¦       Tratamiento.class
+¦               ¦       
+¦               +---presentacion
+¦               ¦       TratamientoServlet.class
+¦               ¦       
+¦               +---prototype
+¦               +---repositorio
+¦               ¦       TratamientoRepository.class
+¦               ¦       
+¦               +---servicio
+¦                   +---service
+¦                   +---serviceImpl
++---nbproject
+¦   ¦   ant-deploy.xml
+¦   ¦   build-impl.xml
+¦   ¦   genfiles.properties
+¦   ¦   project.properties
+¦   ¦   project.xml
+¦   ¦   
+¦   +---private
+¦           private.properties
+¦           
++---src
+¦   +---conf
+¦   ¦       MANIFEST.MF
+¦   ¦       
+¦   +---java
+¦       +---dao
+¦       ¦   ¦   TratamientoDao.java
+¦       ¦   ¦   TratamientoDaoMongo.java
+¦       ¦   ¦   TratamientoDaoMysql.java
+¦       ¦   ¦   TratamientoDaoPostgre.java
+¦       ¦   ¦   
+¦       ¦   +---conexion
+¦       ¦           DatabaConnetion.java
+¦       ¦           MongoConnection.java
+¦       ¦           MysqlConnection.java
+¦       ¦           PostgreConnection.java
+¦       ¦           
+¦       +---dto
+¦       ¦       TratamientoDto.java
+¦       ¦       
+¦       +---external
+¦       +---facade
+¦       +---factory
+¦       +---mapper
+¦       ¦       TratamientoMapper.java
+¦       ¦       
+¦       +---modelo
+¦       ¦       Tratamiento.java
+¦       ¦       
+¦       +---presentacion
+¦       ¦       TratamientoServlet.java
+¦       ¦       
+¦       +---prototype
+¦       +---repositorio
+¦       ¦       TratamientoRepository.java
+¦       ¦       
+¦       +---servicio
+¦           +---service
+¦           +---serviceImpl
++---web
+    ¦   index.html
+    ¦   
+    +---jsp
+    +---META-INF
+    ¦       context.xml
+    ¦       
+    +---WEB-INF
