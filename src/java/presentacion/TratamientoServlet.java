@@ -14,15 +14,18 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
+import com.google.gson.Gson;
 
 @WebServlet(name = "TratamientoServlet", urlPatterns = {"/TratamientoServlet"})
 public class TratamientoServlet extends HttpServlet {
 
     private final TratamientoService tratamientoService;
+    private final Gson gson;
 
     // Constructor
     public TratamientoServlet() throws SQLException {
-        this.tratamientoService = new TratamientoServiceImpl("TipoDb"); // Puedes inyectar la implementación del servicio aquí
+        this.tratamientoService = new TratamientoServiceImpl("TipoDb");
+        this.gson = new Gson();
     }
 
     // Método para procesar las peticiones
@@ -32,30 +35,53 @@ public class TratamientoServlet extends HttpServlet {
         String action = request.getParameter("action");
         System.out.println("Acción recibida: " + action);
 
-        // Filtra las acciones según el parámetro "action"
-        if ("crear".equals(action)) {
-            crearTratamiento(request, response);
-        } else if ("listar".equals(action)) {
-            listarTratamientos(request, response);
-        } else if ("buscar".equals(action)) {
-            buscarTratamientoPorId(request, response);
-        } else if ("actualizar".equals(action)) {
-            actualizarTratamiento(request, response);
-        } else if ("eliminar".equals(action)) {
-            eliminarTratamiento(request, response);
-        } else if ("listarPorFecha".equals(action)) {
-            listarTratamientosPorFecha(request, response);
-        } else if ("listarPorEstado".equals(action)) {
-            listarTratamientosPorEstado(request, response);
-        } else if ("buscarPorNombre".equals(action)) {
-            buscarTratamientoPorNombre(request, response);
-        } else {
-            // Otras acciones o por defecto
+        // Configurar respuesta como JSON
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+
+        try {
+            // Filtra las acciones según el parámetro "action"
+            if ("crear".equals(action)) {
+                crearTratamiento(request, response);
+            } else if ("listar".equals(action)) {
+                listarTratamientos(request, response);
+            } else if ("buscar".equals(action)) {
+                buscarTratamientoPorId(request, response);
+            } else if ("actualizar".equals(action)) {
+                actualizarTratamiento(request, response);
+            } else if ("eliminar".equals(action)) {
+                eliminarTratamiento(request, response);
+            } else if ("listarPorFecha".equals(action)) {
+                listarTratamientosPorFecha(request, response);
+            } else if ("listarPorEstado".equals(action)) {
+                listarTratamientosPorEstado(request, response);
+            } else if ("buscarPorNombre".equals(action)) {
+                buscarTratamientoPorNombre(request, response);
+            } else {
+                // Acción no reconocida
+                JsonResponse<Object> jsonResponse = new JsonResponse<>(
+                    false, 
+                    "Acción no reconocida: " + action, 
+                    null, 
+                    HttpServletResponse.SC_BAD_REQUEST
+                );
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                response.getWriter().write(gson.toJson(jsonResponse));
+            }
+        } catch (Exception e) {
+            JsonResponse<Object> errorResponse = new JsonResponse<>(
+                false, 
+                "Error interno del servidor: " + e.getMessage(), 
+                null, 
+                HttpServletResponse.SC_INTERNAL_SERVER_ERROR
+            );
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().write(gson.toJson(errorResponse));
         }
     }
 
     // Acción para crear un tratamiento
-    private void crearTratamiento(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    private void crearTratamiento(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String descripcion = request.getParameter("descripcion");
         String estado = request.getParameter("estado");
         String fechaInicio = request.getParameter("fechaInicio");
@@ -72,68 +98,185 @@ public class TratamientoServlet extends HttpServlet {
             
             // Verificar si la entidad de salud existe
             if (!new EntidadDeSaludConsumer().entidadExiste(idEntidadDeSalud)) {
-                request.setAttribute("mensaje", "Entidad de salud no encontrada.");
-                request.getRequestDispatcher("/jsp/error.jsp").forward(request, response);
+                JsonResponse<Object> jsonResponse = new JsonResponse<>(
+                    false, 
+                    "Entidad de salud no encontrada", 
+                    null, 
+                    HttpServletResponse.SC_NOT_FOUND
+                );
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                response.getWriter().write(gson.toJson(jsonResponse));
                 return;
             }
             
-            EntidadDeSaludDto entidadDeSaludDto = new EntidadDeSaludDto(id, "Tipo", "Nombre", "Direccion", "Telefono", idEntidadDeSalud, null); // Puedes crear un DTO adecuado aquí
+            EntidadDeSaludDto entidadDeSaludDto = new EntidadDeSaludDto(id, "Tipo", "Nombre", "Direccion", "Telefono", idEntidadDeSalud, null);
             TratamientoDto tratamientoDto = new TratamientoDto(0, descripcion, fechaInicioDate, fechaFinDate, estado, entidadDeSaludDto, null, comentarios);
-            tratamientoService.guardar(entidadDeSaludDto, "Tipo");  // Llamamos al servicio para guardar el tratamiento
+            tratamientoService.guardar(entidadDeSaludDto, "Tipo");
 
-            request.setAttribute("mensaje", "Tratamiento creado con éxito.");
-            listarTratamientos(request, response);
+            JsonResponse<Object> jsonResponse = new JsonResponse<>(
+                true, 
+                "Tratamiento creado con éxito", 
+                null, 
+                HttpServletResponse.SC_CREATED
+            );
+            response.setStatus(HttpServletResponse.SC_CREATED);
+            response.getWriter().write(gson.toJson(jsonResponse));
         } catch (Exception e) {
-            request.setAttribute("mensaje", "Hubo un error al crear el tratamiento.");
-            request.getRequestDispatcher("/jsp/crearTratamiento.jsp").forward(request, response);
+            JsonResponse<Object> jsonResponse = new JsonResponse<>(
+                false, 
+                "Hubo un error al crear el tratamiento: " + e.getMessage(), 
+                null, 
+                HttpServletResponse.SC_INTERNAL_SERVER_ERROR
+            );
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().write(gson.toJson(jsonResponse));
         }
     }
 
     // Acción para listar todos los tratamientos
-    private void listarTratamientos(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    private void listarTratamientos(HttpServletRequest request, HttpServletResponse response) throws IOException {
         List<TratamientoDto> tratamientos = tratamientoService.listarTodosLosTratamientos();
-        request.setAttribute("tratamientos", tratamientos);
-        request.getRequestDispatcher("/jsp/listarTratamientos.jsp").forward(request, response);
+        
+        JsonResponse<List<TratamientoDto>> jsonResponse = new JsonResponse<>(
+            true, 
+            "Tratamientos obtenidos exitosamente", 
+            tratamientos, 
+            HttpServletResponse.SC_OK
+        );
+        
+        response.getWriter().write(gson.toJson(jsonResponse));
     }
 
     // Acción para listar tratamientos por fecha
-    private void listarTratamientosPorFecha(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    private void listarTratamientosPorFecha(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String fechaParam = request.getParameter("fecha");
-        LocalDate fecha = LocalDate.parse(fechaParam);
-        List<TratamientoDto> tratamientos = tratamientoService.buscarTratamientosPorFecha(fecha);
-        request.setAttribute("tratamientos", tratamientos);
-        request.getRequestDispatcher("/jsp/listarTratamientosPorFecha.jsp").forward(request, response);
+        
+        if (fechaParam == null || fechaParam.isEmpty()) {
+            JsonResponse<Object> jsonResponse = new JsonResponse<>(
+                false, 
+                "El parámetro fecha es requerido", 
+                null, 
+                HttpServletResponse.SC_BAD_REQUEST
+            );
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write(gson.toJson(jsonResponse));
+            return;
+        }
+        
+        try {
+            LocalDate fecha = LocalDate.parse(fechaParam);
+            List<TratamientoDto> tratamientos = tratamientoService.buscarTratamientosPorFecha(fecha);
+            
+            JsonResponse<List<TratamientoDto>> jsonResponse = new JsonResponse<>(
+                true, 
+                "Tratamientos por fecha obtenidos exitosamente", 
+                tratamientos, 
+                HttpServletResponse.SC_OK
+            );
+            
+            response.getWriter().write(gson.toJson(jsonResponse));
+        } catch (Exception e) {
+            JsonResponse<Object> jsonResponse = new JsonResponse<>(
+                false, 
+                "Error al procesar la fecha: " + e.getMessage(), 
+                null, 
+                HttpServletResponse.SC_BAD_REQUEST
+            );
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write(gson.toJson(jsonResponse));
+        }
     }
 
     // Acción para listar tratamientos por estado
-    private void listarTratamientosPorEstado(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    private void listarTratamientosPorEstado(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String estado = request.getParameter("estado");
+        
+        if (estado == null || estado.isEmpty()) {
+            JsonResponse<Object> jsonResponse = new JsonResponse<>(
+                false, 
+                "El parámetro estado es requerido", 
+                null, 
+                HttpServletResponse.SC_BAD_REQUEST
+            );
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write(gson.toJson(jsonResponse));
+            return;
+        }
+        
         List<TratamientoDto> tratamientos = tratamientoService.buscarTratamientosPorEstado(estado);
-        request.setAttribute("tratamientos", tratamientos);
-        request.getRequestDispatcher("/jsp/listarTratamientosPorEstado.jsp").forward(request, response);
+        
+        JsonResponse<List<TratamientoDto>> jsonResponse = new JsonResponse<>(
+            true, 
+            "Tratamientos por estado obtenidos exitosamente", 
+            tratamientos, 
+            HttpServletResponse.SC_OK
+        );
+        
+        response.getWriter().write(gson.toJson(jsonResponse));
     }
 
     // Acción para buscar un tratamiento por ID
-    private void buscarTratamientoPorId(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    private void buscarTratamientoPorId(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String idd = request.getParameter("id");
-        int id = Integer.parseInt(idd);
+        
+        if (idd == null || idd.isEmpty()) {
+            JsonResponse<Object> jsonResponse = new JsonResponse<>(
+                false, 
+                "El parámetro id es requerido", 
+                null, 
+                HttpServletResponse.SC_BAD_REQUEST
+            );
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write(gson.toJson(jsonResponse));
+            return;
+        }
+        
         try {
+            int id = Integer.parseInt(idd);
             TratamientoDto tratamiento = tratamientoService.buscarTratamientoPorId(id);
+            
             if (tratamiento != null) {
-                request.setAttribute("tratamiento", tratamiento);
-                request.getRequestDispatcher("/jsp/verTratamiento.jsp").forward(request, response);
+                JsonResponse<TratamientoDto> jsonResponse = new JsonResponse<>(
+                    true, 
+                    "Tratamiento encontrado", 
+                    tratamiento, 
+                    HttpServletResponse.SC_OK
+                );
+                response.getWriter().write(gson.toJson(jsonResponse));
             } else {
-                response.sendRedirect("/jsp/tratamientoNoEncontrado.jsp");
+                JsonResponse<Object> jsonResponse = new JsonResponse<>(
+                    false, 
+                    "Tratamiento no encontrado", 
+                    null, 
+                    HttpServletResponse.SC_NOT_FOUND
+                );
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                response.getWriter().write(gson.toJson(jsonResponse));
             }
+        } catch (NumberFormatException e) {
+            JsonResponse<Object> jsonResponse = new JsonResponse<>(
+                false, 
+                "ID de tratamiento inválido", 
+                null, 
+                HttpServletResponse.SC_BAD_REQUEST
+            );
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write(gson.toJson(jsonResponse));
         } catch (Exception e) {
-            response.sendRedirect("/jsp/tratamientoNoEncontrado.jsp");
+            JsonResponse<Object> jsonResponse = new JsonResponse<>(
+                false, 
+                "Error al buscar el tratamiento: " + e.getMessage(), 
+                null, 
+                HttpServletResponse.SC_INTERNAL_SERVER_ERROR
+            );
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().write(gson.toJson(jsonResponse));
         }
     }
 
     // Acción para actualizar un tratamiento
-    private void actualizarTratamiento(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    private void actualizarTratamiento(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String idd = request.getParameter("id");
-        int id = Integer.parseInt(idd);
         String descripcion = request.getParameter("descripcion");
         String estado = request.getParameter("estado");
         String fechaInicio = request.getParameter("fechaInicio");
@@ -141,42 +284,104 @@ public class TratamientoServlet extends HttpServlet {
         String comentarios = request.getParameter("comentarios");
 
         try {
+            int id = Integer.parseInt(idd);
             // Convertimos las fechas de String a LocalDate
             LocalDate fechaInicioDate = LocalDate.parse(fechaInicio);
             LocalDate fechaFinDate = LocalDate.parse(fechaFin);
 
             TratamientoDto tratamientoDto = new TratamientoDto(id, descripcion, fechaInicioDate, fechaFinDate, estado, null, null, comentarios);
-            tratamientoService.actualizarTratamiento(id, tratamientoDto, "Tipo"); // Aquí se puede agregar más lógica para el tipo si es necesario
+            tratamientoService.actualizarTratamiento(id, tratamientoDto, "Tipo");
 
-            request.setAttribute("mensaje", "Tratamiento actualizado con éxito.");
-            listarTratamientos(request, response);
+            JsonResponse<Object> jsonResponse = new JsonResponse<>(
+                true, 
+                "Tratamiento actualizado con éxito", 
+                null, 
+                HttpServletResponse.SC_OK
+            );
+            response.getWriter().write(gson.toJson(jsonResponse));
+        } catch (NumberFormatException e) {
+            JsonResponse<Object> jsonResponse = new JsonResponse<>(
+                false, 
+                "ID de tratamiento inválido", 
+                null, 
+                HttpServletResponse.SC_BAD_REQUEST
+            );
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write(gson.toJson(jsonResponse));
         } catch (Exception e) {
-            request.setAttribute("mensaje", "Hubo un error al actualizar el tratamiento.");
-            request.getRequestDispatcher("/jsp/editarTratamiento.jsp").forward(request, response);
+            JsonResponse<Object> jsonResponse = new JsonResponse<>(
+                false, 
+                "Hubo un error al actualizar el tratamiento: " + e.getMessage(), 
+                null, 
+                HttpServletResponse.SC_INTERNAL_SERVER_ERROR
+            );
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().write(gson.toJson(jsonResponse));
         }
     }
 
     // Acción para eliminar un tratamiento
-    private void eliminarTratamiento(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    private void eliminarTratamiento(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String idd = request.getParameter("id");
-        int id = Integer.parseInt(idd);
 
         try {
+            int id = Integer.parseInt(idd);
             tratamientoService.eliminarTratamiento(id);
-            request.setAttribute("mensaje", "Tratamiento eliminado con éxito.");
-            listarTratamientos(request, response);
+
+            JsonResponse<Object> jsonResponse = new JsonResponse<>(
+                true, 
+                "Tratamiento eliminado con éxito", 
+                null, 
+                HttpServletResponse.SC_OK
+            );
+            response.getWriter().write(gson.toJson(jsonResponse));
+        } catch (NumberFormatException e) {
+            JsonResponse<Object> jsonResponse = new JsonResponse<>(
+                false, 
+                "ID de tratamiento inválido", 
+                null, 
+                HttpServletResponse.SC_BAD_REQUEST
+            );
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write(gson.toJson(jsonResponse));
         } catch (Exception e) {
-            request.setAttribute("mensaje", "Hubo un error al eliminar el tratamiento.");
-            request.getRequestDispatcher("/jsp/listarTratamientos.jsp").forward(request, response);
+            JsonResponse<Object> jsonResponse = new JsonResponse<>(
+                false, 
+                "Hubo un error al eliminar el tratamiento: " + e.getMessage(), 
+                null, 
+                HttpServletResponse.SC_INTERNAL_SERVER_ERROR
+            );
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().write(gson.toJson(jsonResponse));
         }
     }
 
     // Acción para buscar un tratamiento por nombre
-    private void buscarTratamientoPorNombre(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    private void buscarTratamientoPorNombre(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String nombre = request.getParameter("nombre");
+        
+        if (nombre == null || nombre.isEmpty()) {
+            JsonResponse<Object> jsonResponse = new JsonResponse<>(
+                false, 
+                "El parámetro nombre es requerido", 
+                null, 
+                HttpServletResponse.SC_BAD_REQUEST
+            );
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write(gson.toJson(jsonResponse));
+            return;
+        }
+        
         List<TratamientoDto> tratamientos = tratamientoService.buscarTratamientoPorNombre(nombre);
-        request.setAttribute("tratamientos", tratamientos);
-        request.getRequestDispatcher("/jsp/listarTratamientosPorNombre.jsp").forward(request, response);
+        
+        JsonResponse<List<TratamientoDto>> jsonResponse = new JsonResponse<>(
+            true, 
+            "Tratamientos por nombre obtenidos exitosamente", 
+            tratamientos, 
+            HttpServletResponse.SC_OK
+        );
+        
+        response.getWriter().write(gson.toJson(jsonResponse));
     }
 
     @Override
