@@ -3,8 +3,6 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package modelo;
-import modelo.EntidadDeSalud;
-import modelo.Usuario;
 
 import java.time.LocalDate;
 
