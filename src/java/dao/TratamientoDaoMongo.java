@@ -3,22 +3,24 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package dao;
-import com.sun.jdi.connect.spi.Connection;
-import dao.TratamientoDao;
+import dao.conexion.DatabaseConnection;
+import factory.DatabaseConnectionFactory;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
-import modelo.EntidadDeSalud;
 import modelo.Tratamiento;
 /**
  *
  * @author Usuario
  */
 public class TratamientoDaoMongo implements TratamientoDao{
-    private final Connection conn;
+    private final java.sql.Connection conn;
 
-    public TratamientoDaoMongo(String tipoDb) {
-        this.conn = null;
+    public TratamientoDaoMongo(DatabaseConnection connection) throws SQLException {
+        DatabaseConnection db = DatabaseConnectionFactory.connection("mongo");
+        this.conn = db.getConnection();
     }
+
     @Override
     public Tratamiento buscarTratamientoPorId(int id) {
         throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
@@ -30,22 +32,22 @@ public class TratamientoDaoMongo implements TratamientoDao{
     }
 
     @Override
-    public void guardar(EntidadDeSalud usuario, String tipo) {
+    public void guardar(Tratamiento tratamiento) {
         throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
     @Override
-    public List<Tratamiento> buscarTratamientoPorSuNombre(String tipo) {
+    public List<Tratamiento> buscarTratamientoPorDescripcion(String descripcion) {
         throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
     @Override
-    public List<Tratamiento> listarTodosLosTratamietnos() {
+    public List<Tratamiento> listarTodosLosTratamientos() {
         throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
     @Override
-    public void actualizarTratamiento(int id, Tratamiento usuario, String tipo) {
+    public void actualizarTratamiento(int id, Tratamiento tratamiento) {
         throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
@@ -63,5 +65,5 @@ public class TratamientoDaoMongo implements TratamientoDao{
     public List<Tratamiento> buscarTratamientosPorEstado(String estado) {
         throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
-    
+
 }

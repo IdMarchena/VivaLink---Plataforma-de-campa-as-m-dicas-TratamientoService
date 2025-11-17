@@ -18,10 +18,10 @@ import modelo.Usuario;
 public interface TratamientoDao {
     Tratamiento buscarTratamientoPorId(int id);
     boolean verificarSiElTratamientoExiste(int id);
-    void guardar(EntidadDeSalud usuario,String tipo);
-    List<Tratamiento> buscarTratamientoPorSuNombre(String tipo);
-    List<Tratamiento> listarTodosLosTratamietnos();
-    void actualizarTratamiento(int id, Tratamiento usuario, String tipo);
+    void guardar(Tratamiento tratamiento); // CORREGIDO: recibe Tratamiento
+    List<Tratamiento> buscarTratamientoPorDescripcion(String descripcion); // CORREGIDO: nombre más descriptivo
+    List<Tratamiento> listarTodosLosTratamientos(); // CORREGIDO: nombre corregido
+    void actualizarTratamiento(int id, Tratamiento tratamiento); // CORREGIDO: sin parámetro tipo
     void eliminarTratamiento(int id);
     List<Tratamiento> buscarTratamientosPorFecha(LocalDate fecha);
     List<Tratamiento> buscarTratamientosPorEstado(String estado);

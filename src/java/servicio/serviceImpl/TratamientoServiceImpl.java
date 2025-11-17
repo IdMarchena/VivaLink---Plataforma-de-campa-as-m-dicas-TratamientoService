@@ -1,6 +1,4 @@
 package servicio.serviceImpl;
-
-import dto.EntidadDeSaludDto;
 import dto.TratamientoDto;
 import external.EntidadDeSaludConsumer;
 import mapper.TratamientoMapper;
@@ -14,12 +12,10 @@ import java.util.List;
 public class TratamientoServiceImpl implements TratamientoService {
 
     private final TratamientoRepository tratamientoRepository;
-    private final EntidadDeSaludConsumer entidadDeSaludConsumer;
 
     // Constructor que recibe el tipo de base de datos
     public TratamientoServiceImpl(String tipoDb) throws SQLException {
-        this.tratamientoRepository = new TratamientoRepository(tipoDb);
-        this.entidadDeSaludConsumer = new EntidadDeSaludConsumer(); // Instanciamos el consumidor externo
+        this.tratamientoRepository = new TratamientoRepository();
     }
 
     @Override
@@ -33,23 +29,14 @@ public class TratamientoServiceImpl implements TratamientoService {
     }
 
     @Override
-    public void guardar(EntidadDeSaludDto entidadDeSaludDto, String tipo) {
-        // Verificamos que la entidad de salud exista
-        if (!entidadDeSaludConsumer.entidadExiste(entidadDeSaludDto.identificador())) {
-            throw new IllegalArgumentException("La entidad de salud no existe.");
-        }
-
-        // Convertimos el DTO de EntidadDeSalud a la entidad
-        // Convertimos el DTO de EntidadDeSalud a la entidad correspondiente
-        var entidadDeSalud = TratamientoMapper.dtoToEntidadDeSalud(entidadDeSaludDto);
-
-        // Guardamos el tratamiento en la base de datos
-        tratamientoRepository.guardarTratamiento(entidadDeSalud, tipo);
+    public void guardar(TratamientoDto tratamiento) {
+        var Tratamietno = TratamientoMapper.dtoToTratamiento(tratamiento);
+        tratamientoRepository.guardarTratamiento(Tratamietno);
     }
 
     @Override
-    public List<TratamientoDto> buscarTratamientoPorNombre(String tipo) {
-        return TratamientoMapper.entityListToDtoList(tratamientoRepository.buscarTratamientosPorNombre(tipo));
+    public List<TratamientoDto> buscarTratamientoPorDescripcion(String descripcion) {
+        return TratamientoMapper.entityListToDtoList(tratamientoRepository.buscarTratamientosPorNombre(descripcion));
     }
 
     @Override
@@ -58,12 +45,12 @@ public class TratamientoServiceImpl implements TratamientoService {
     }
 
     @Override
-    public void actualizarTratamiento(int id, TratamientoDto tratamientoDto, String tipo) {
+    public void actualizarTratamiento(int id, TratamientoDto tratamientoDto) {
         // Convertimos el DTO de Tratamiento a la entidad correspondiente
         var tratamiento = TratamientoMapper.dtoToTratamiento(tratamientoDto);
 
         // Actualizamos el tratamiento en la base de datos
-        tratamientoRepository.actualizarTratamiento(id, tratamiento, tipo);
+        tratamientoRepository.actualizarTratamiento(id, tratamiento);
     }
 
     @Override

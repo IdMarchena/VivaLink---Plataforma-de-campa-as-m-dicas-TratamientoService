@@ -9,21 +9,25 @@ import dao.TratamientoDao;
 import dao.TratamientoDaoMongo;
 import dao.TratamientoDaoMysql;
 import dao.TratamientoDaoPostgre;
+import dao.conexion.DatabaseConnection;
 /**
  *
  * @author Usuario
  */
 public class TratamientoDaoFactory {
         public static TratamientoDao dao(String tipoDao) throws SQLException{
+                DatabaseConnection conn = DatabaseConnectionFactory.connection(tipoDao);
                 switch (tipoDao.toLowerCase()) {
-            case "postgre":
-                return new TratamientoDaoPostgre(tipoDao);
-            case "mysql":
-                return new TratamientoDaoMysql(tipoDao);
-            case "mongo":
-                return new TratamientoDaoMongo(tipoDao);               
-            default:
-                throw new AssertionError();
+            case "postgres" -> {
+                return new TratamientoDaoPostgre(conn);
+            }
+            case "mysql" -> {
+                return new TratamientoDaoMysql(conn);
+            }
+            case "mongo" -> {
+                return new TratamientoDaoMongo(conn);
+            }
+            default -> throw new AssertionError();
         }
     }
     

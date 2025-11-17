@@ -4,6 +4,7 @@ import servicio.service.TratamientoService;
 import servicio.serviceImpl.TratamientoServiceImpl;
 import dto.TratamientoDto;
 import dto.EntidadDeSaludDto;
+import dto.UsuarioDto;
 import external.EntidadDeSaludConsumer;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -15,6 +16,7 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 @WebServlet(name = "TratamientoServlet", urlPatterns = {"/TratamientoServlet"})
 public class TratamientoServlet extends HttpServlet {
@@ -22,45 +24,41 @@ public class TratamientoServlet extends HttpServlet {
     private final TratamientoService tratamientoService;
     private final Gson gson;
 
-    // Constructor
     public TratamientoServlet() throws SQLException {
-        this.tratamientoService = new TratamientoServiceImpl("TipoDb");
-        this.gson = new Gson();
+        this.tratamientoService = new TratamientoServiceImpl("postgres");
+        
+        this.gson = new GsonBuilder()
+            .registerTypeAdapter(LocalDate.class, new LocalDateAdapter())
+            .setDateFormat("yyyy-MM-dd")
+            .create();
     }
 
-    // Método para procesar las peticiones
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
         String action = request.getParameter("action");
         System.out.println("Acción recibida: " + action);
 
-        // Configurar respuesta como JSON
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
         try {
-            // Filtra las acciones según el parámetro "action"
-            if ("crear".equals(action)) {
-                crearTratamiento(request, response);
-            } else if ("listar".equals(action)) {
-                listarTratamientos(request, response);
-            } else if ("buscar".equals(action)) {
-                buscarTratamientoPorId(request, response);
-            } else if ("actualizar".equals(action)) {
-                actualizarTratamiento(request, response);
-            } else if ("eliminar".equals(action)) {
-                eliminarTratamiento(request, response);
-            } else if ("listarPorFecha".equals(action)) {
-                listarTratamientosPorFecha(request, response);
-            } else if ("listarPorEstado".equals(action)) {
-                listarTratamientosPorEstado(request, response);
-            } else if ("buscarPorNombre".equals(action)) {
-                buscarTratamientoPorNombre(request, response);
-            } else {
-                // Acción no reconocida
+            if (null == action) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 response.getWriter().write(gson.toJson("Acción no reconocida: " + action));
+            } else switch (action) {
+                case "crear" -> crearTratamiento(request, response);
+                case "listar" -> listarTratamientos(request, response);
+                case "buscar" -> buscarTratamientoPorId(request, response);
+                case "actualizar" -> actualizarTratamiento(request, response);
+                case "eliminar" -> eliminarTratamiento(request, response);
+                case "listarPorFecha" -> listarTratamientosPorFecha(request, response);
+                case "listarPorEstado" -> listarTratamientosPorEstado(request, response);
+                case "buscarPorDescripcion" -> buscarTratamientoPorDescripcion(request, response);
+                default -> {
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    response.getWriter().write(gson.toJson("Acción no reconocida: " + action));
+                }
             }
         } catch (IOException e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -68,56 +66,98 @@ public class TratamientoServlet extends HttpServlet {
         }
     }
 
-    // Acción para crear un tratamiento
+    // Acción para crear un tratamiento - CORREGIDO
     private void crearTratamiento(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String descripcion = request.getParameter("descripcion");
-        String estado = request.getParameter("estado");
-        String fechaInicio = request.getParameter("fechaInicio");
-        String fechaFin = request.getParameter("fechaFin");
-        String idEntidadDeSalud = request.getParameter("idEntidadDeSalud");
-        String comentarios = request.getParameter("comentarios");
-
         try {
-            // Validar parámetros requeridos
+            // Obtener todos los parámetros necesarios para Tratamiento
+            String descripcion = request.getParameter("descripcion");
+            String estado = request.getParameter("estado");
+            String fechaInicio = request.getParameter("fechaInicio");
+            String fechaFin = request.getParameter("fechaFin");
+            String comentarios = request.getParameter("comentarios");
+
+            // Obtener parámetros para EntidadDeSalud
+            String idEntidadDeSalud = request.getParameter("idEntidadDeSalud");
+            String tipoEntidad = request.getParameter("tipoEntidad");
+            String nombreEntidad = request.getParameter("nombreEntidad");
+            String direccionEntidad = request.getParameter("direccionEntidad");
+            String telefonoEntidad = request.getParameter("telefonoEntidad");
+            String identificadorEntidad = request.getParameter("identificadorEntidad");
+
+            // Obtener parámetros para Usuario
+            String idUsuario = request.getParameter("idUsuario");
+            String telefonoUsuario = request.getParameter("telefonoUsuario");
+            String fechaNacimientoUsuario = request.getParameter("fechaNacimientoUsuario");
+            String sexoUsuario = request.getParameter("sexoUsuario");
+            String direccionUsuario = request.getParameter("direccionUsuario");
+
+            // Validar parámetros requeridos para Tratamiento
             if (descripcion == null || descripcion.isEmpty() || 
                 estado == null || estado.isEmpty() ||
                 fechaInicio == null || fechaInicio.isEmpty() ||
-                idEntidadDeSalud == null || idEntidadDeSalud.isEmpty()) {
+                idEntidadDeSalud == null || idEntidadDeSalud.isEmpty() ||
+                idUsuario == null || idUsuario.isEmpty()) {
                 
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                response.getWriter().write(gson.toJson("Todos los campos requeridos: descripcion, estado, fechaInicio, idEntidadDeSalud"));
+                response.getWriter().write(gson.toJson("Todos los campos requeridos: descripcion, estado, fechaInicio, idEntidadDeSalud, idUsuario"));
                 return;
             }
 
             // Convertir fechas
             LocalDate fechaInicioDate = LocalDate.parse(fechaInicio);
-            LocalDate fechaFinDate = fechaFin != null && !fechaFin.isEmpty() ? LocalDate.parse(fechaFin) : null;
+            LocalDate fechaFinDate = (fechaFin != null && !fechaFin.isEmpty()) ? LocalDate.parse(fechaFin) : null;
+            LocalDate fechaNacimientoDate = (fechaNacimientoUsuario != null && !fechaNacimientoUsuario.isEmpty()) 
+                ? LocalDate.parse(fechaNacimientoUsuario) 
+                : LocalDate.now(); // Valor por defecto si no se proporciona
             
             int idEntidad = Integer.parseInt(idEntidadDeSalud);
+            int idUser = Integer.parseInt(idUsuario);
             
-            // Verificar si la entidad de salud existe
-            if (!new EntidadDeSaludConsumer().entidadExiste(idEntidadDeSalud)) {
-                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                response.getWriter().write(gson.toJson("Entidad de salud no encontrada"));
-                return;
-            }
+            // Crear UsuarioDto con datos obtenidos de los parámetros
+            UsuarioDto usuarioDto = new UsuarioDto(
+                idUser,
+                telefonoUsuario != null ? telefonoUsuario : "3000000000", // Valor por defecto
+                fechaNacimientoDate,
+                sexoUsuario != null ? sexoUsuario : "M", // Valor por defecto
+                direccionUsuario != null ? direccionUsuario : "Dirección no especificada" // Valor por defecto
+            );
             
-            // Crear DTOs necesarios
-            EntidadDeSaludDto entidadDeSaludDto = new EntidadDeSaludDto(idEntidad, "Tipo", "Nombre", "Direccion", "Telefono", idEntidadDeSalud, null);
-            TratamientoDto tratamientoDto = new TratamientoDto(0, descripcion, fechaInicioDate, fechaFinDate, estado, entidadDeSaludDto, null, comentarios);
+            // Crear EntidadDeSaludDto con datos obtenidos de los parámetros
+            EntidadDeSaludDto entidadDeSaludDto = new EntidadDeSaludDto(
+                idEntidad,
+                tipoEntidad != null ? tipoEntidad : "EPS", // Valor por defecto
+                nombreEntidad != null ? nombreEntidad : "Entidad Temporal", // Valor por defecto
+                direccionEntidad != null ? direccionEntidad : "Dirección temporal", // Valor por defecto
+                telefonoEntidad != null ? telefonoEntidad : "3000000000", // Valor por defecto
+                identificadorEntidad != null ? identificadorEntidad : "identificador-temporal", // Valor por defecto
+                usuarioDto // El usuario gerente de la entidad
+            );
             
-            // Guardar tratamiento
-            tratamientoService.guardar(entidadDeSaludDto, "Tipo");
+            // Crear TratamientoDto con todos los datos
+            TratamientoDto tratamientoDto = new TratamientoDto(
+                0, // ID se generará automáticamente
+                descripcion,
+                fechaInicioDate,
+                fechaFinDate,
+                estado,
+                entidadDeSaludDto,
+                usuarioDto,
+                comentarios != null ? comentarios : "" // Valor por defecto
+            );
+            
+            // Guardar tratamiento usando el servicio
+            tratamientoService.guardar(tratamientoDto);
 
             response.setStatus(HttpServletResponse.SC_CREATED);
             response.getWriter().write(gson.toJson("Tratamiento creado con éxito"));
             
         } catch (NumberFormatException e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.getWriter().write(gson.toJson("ID de entidad de salud inválido"));
-        } catch (IOException e) {
+            response.getWriter().write(gson.toJson("ID de entidad de salud o usuario inválido"));
+        } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(gson.toJson("Error al crear tratamiento: " + e.getMessage()));
+            e.printStackTrace();
         }
     }
 
@@ -125,10 +165,36 @@ public class TratamientoServlet extends HttpServlet {
     private void listarTratamientos(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
             List<TratamientoDto> tratamientos = tratamientoService.listarTodosLosTratamientos();
-            response.getWriter().write(gson.toJson(tratamientos));
+            
+            if (tratamientos.isEmpty()) {
+                response.getWriter().write(gson.toJson("No se encontraron tratamientos"));
+            } else {
+                response.getWriter().write(gson.toJson(tratamientos));
+            }
+            
         } catch (IOException e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(gson.toJson("Error al listar tratamientos: " + e.getMessage()));
+        }
+    }
+
+    // Acción para buscar tratamientos por descripción
+    private void buscarTratamientoPorDescripcion(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String descripcion = request.getParameter("descripcion");
+        
+        if (descripcion == null || descripcion.isEmpty()) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write(gson.toJson("El parámetro descripcion es requerido"));
+            return;
+        }
+        
+        try {
+            List<TratamientoDto> tratamientos = tratamientoService.buscarTratamientoPorDescripcion(descripcion);
+            response.getWriter().write(gson.toJson(tratamientos));
+            
+        } catch (Exception e) {
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().write(gson.toJson("Error al buscar tratamientos por descripción: " + e.getMessage()));
         }
     }
 
@@ -147,9 +213,9 @@ public class TratamientoServlet extends HttpServlet {
             List<TratamientoDto> tratamientos = tratamientoService.buscarTratamientosPorFecha(fecha);
             response.getWriter().write(gson.toJson(tratamientos));
             
-        } catch (IOException e) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.getWriter().write(gson.toJson("Error al procesar la fecha: " + e.getMessage()));
+        } catch (Exception e) {
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().write(gson.toJson("Error al listar tratamientos por fecha: " + e.getMessage()));
         }
     }
 
@@ -167,7 +233,7 @@ public class TratamientoServlet extends HttpServlet {
             List<TratamientoDto> tratamientos = tratamientoService.buscarTratamientosPorEstado(estado);
             response.getWriter().write(gson.toJson(tratamientos));
             
-        } catch (IOException e) {
+        } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(gson.toJson("Error al listar tratamientos por estado: " + e.getMessage()));
         }
@@ -196,49 +262,105 @@ public class TratamientoServlet extends HttpServlet {
         } catch (NumberFormatException e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             response.getWriter().write(gson.toJson("ID de tratamiento inválido"));
-        } catch (IOException e) {
+        } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(gson.toJson("Error al buscar tratamiento: " + e.getMessage()));
         }
     }
 
-    // Acción para actualizar un tratamiento
+    // Acción para actualizar un tratamiento - CORREGIDO
     private void actualizarTratamiento(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String idStr = request.getParameter("id");
-        String descripcion = request.getParameter("descripcion");
-        String estado = request.getParameter("estado");
-        String fechaInicio = request.getParameter("fechaInicio");
-        String fechaFin = request.getParameter("fechaFin");
-        String comentarios = request.getParameter("comentarios");
-
         try {
+            // Obtener parámetros para Tratamiento
+            String idStr = request.getParameter("id");
+            String descripcion = request.getParameter("descripcion");
+            String estado = request.getParameter("estado");
+            String fechaInicio = request.getParameter("fechaInicio");
+            String fechaFin = request.getParameter("fechaFin");
+            String comentarios = request.getParameter("comentarios");
+
+            // Obtener parámetros para EntidadDeSalud
+            String idEntidadDeSalud = request.getParameter("idEntidadDeSalud");
+            String tipoEntidad = request.getParameter("tipoEntidad");
+            String nombreEntidad = request.getParameter("nombreEntidad");
+            String direccionEntidad = request.getParameter("direccionEntidad");
+            String telefonoEntidad = request.getParameter("telefonoEntidad");
+            String identificadorEntidad = request.getParameter("identificadorEntidad");
+
+            // Obtener parámetros para Usuario
+            String idUsuario = request.getParameter("idUsuario");
+            String telefonoUsuario = request.getParameter("telefonoUsuario");
+            String fechaNacimientoUsuario = request.getParameter("fechaNacimientoUsuario");
+            String sexoUsuario = request.getParameter("sexoUsuario");
+            String direccionUsuario = request.getParameter("direccionUsuario");
+
             int id = Integer.parseInt(idStr);
             
             // Validar parámetros requeridos
             if (descripcion == null || descripcion.isEmpty() || 
                 estado == null || estado.isEmpty() ||
-                fechaInicio == null || fechaInicio.isEmpty()) {
+                fechaInicio == null || fechaInicio.isEmpty() ||
+                idEntidadDeSalud == null || idEntidadDeSalud.isEmpty() ||
+                idUsuario == null || idUsuario.isEmpty()) {
                 
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                response.getWriter().write(gson.toJson("Todos los campos requeridos: descripcion, estado, fechaInicio"));
+                response.getWriter().write(gson.toJson("Todos los campos requeridos: descripcion, estado, fechaInicio, idEntidadDeSalud, idUsuario"));
                 return;
             }
 
             // Convertir fechas
             LocalDate fechaInicioDate = LocalDate.parse(fechaInicio);
-            LocalDate fechaFinDate = fechaFin != null && !fechaFin.isEmpty() ? LocalDate.parse(fechaFin) : null;
+            LocalDate fechaFinDate = (fechaFin != null && !fechaFin.isEmpty()) ? LocalDate.parse(fechaFin) : null;
+            LocalDate fechaNacimientoDate = (fechaNacimientoUsuario != null && !fechaNacimientoUsuario.isEmpty()) 
+                ? LocalDate.parse(fechaNacimientoUsuario) 
+                : LocalDate.now();
 
-            TratamientoDto tratamientoDto = new TratamientoDto(id, descripcion, fechaInicioDate, fechaFinDate, estado, null, null, comentarios);
-            tratamientoService.actualizarTratamiento(id, tratamientoDto, "Tipo");
+            int idEntidad = Integer.parseInt(idEntidadDeSalud);
+            int idUser = Integer.parseInt(idUsuario);
+
+            // Crear UsuarioDto con datos de parámetros
+            UsuarioDto usuarioDto = new UsuarioDto(
+                idUser,
+                telefonoUsuario != null ? telefonoUsuario : "3000000000",
+                fechaNacimientoDate,
+                sexoUsuario != null ? sexoUsuario : "M",
+                direccionUsuario != null ? direccionUsuario : "Dirección no especificada"
+            );
+
+            // Crear EntidadDeSaludDto con datos de parámetros
+            EntidadDeSaludDto entidadDeSaludDto = new EntidadDeSaludDto(
+                idEntidad,
+                tipoEntidad != null ? tipoEntidad : "EPS",
+                nombreEntidad != null ? nombreEntidad : "Entidad Temporal",
+                direccionEntidad != null ? direccionEntidad : "Dirección temporal",
+                telefonoEntidad != null ? telefonoEntidad : "3000000000",
+                identificadorEntidad != null ? identificadorEntidad : "identificador-temporal",
+                usuarioDto
+            );
+
+            // Crear TratamientoDto con todos los datos
+            TratamientoDto tratamientoDto = new TratamientoDto(
+                id,
+                descripcion,
+                fechaInicioDate,
+                fechaFinDate,
+                estado,
+                entidadDeSaludDto,
+                usuarioDto,
+                comentarios != null ? comentarios : ""
+            );
+            
+            tratamientoService.actualizarTratamiento(id, tratamientoDto);
 
             response.getWriter().write(gson.toJson("Tratamiento actualizado con éxito"));
             
         } catch (NumberFormatException e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             response.getWriter().write(gson.toJson("ID de tratamiento inválido"));
-        } catch (IOException e) {
+        } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(gson.toJson("Error al actualizar tratamiento: " + e.getMessage()));
+            e.printStackTrace();
         }
     }
 
@@ -255,29 +377,9 @@ public class TratamientoServlet extends HttpServlet {
         } catch (NumberFormatException e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             response.getWriter().write(gson.toJson("ID de tratamiento inválido"));
-        } catch (IOException e) {
+        } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(gson.toJson("Error al eliminar tratamiento: " + e.getMessage()));
-        }
-    }
-
-    // Acción para buscar un tratamiento por nombre
-    private void buscarTratamientoPorNombre(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String nombre = request.getParameter("nombre");
-        
-        if (nombre == null || nombre.isEmpty()) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.getWriter().write(gson.toJson("El parámetro nombre es requerido"));
-            return;
-        }
-        
-        try {
-            List<TratamientoDto> tratamientos = tratamientoService.buscarTratamientoPorNombre(nombre);
-            response.getWriter().write(gson.toJson(tratamientos));
-            
-        } catch (IOException e) {
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.getWriter().write(gson.toJson("Error al buscar tratamientos por nombre: " + e.getMessage()));
         }
     }
 

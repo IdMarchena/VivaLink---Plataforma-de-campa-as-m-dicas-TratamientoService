@@ -4,7 +4,6 @@
  */
 package servicio.service;
 import dto.TratamientoDto;
-import dto.EntidadDeSaludDto;
 import java.time.LocalDate;
 import java.util.List;
 /**
@@ -14,10 +13,10 @@ import java.util.List;
 public interface TratamientoService {
     TratamientoDto buscarTratamientoPorId(int id);
     boolean verificarSiElTratamientoExiste(int id);
-    void guardar(EntidadDeSaludDto entidadDeSalud, String tipo);
-    List<TratamientoDto> buscarTratamientoPorNombre(String tipo);
-    List<TratamientoDto> listarTodosLosTratamientos();
-    void actualizarTratamiento(int id, TratamientoDto tratamiento, String tipo);
+    void guardar(TratamientoDto tratamiento); // CORREGIDO: recibe Tratamiento
+    List<TratamientoDto> buscarTratamientoPorDescripcion(String descripcion); // CORREGIDO: nombre más descriptivo
+    List<TratamientoDto> listarTodosLosTratamientos(); // CORREGIDO: nombre corregido
+    void actualizarTratamiento(int id, TratamientoDto tratamiento); // CORREGIDO: sin parámetro tipo
     void eliminarTratamiento(int id);
     List<TratamientoDto> buscarTratamientosPorFecha(LocalDate fecha);
     List<TratamientoDto> buscarTratamientosPorEstado(String estado);

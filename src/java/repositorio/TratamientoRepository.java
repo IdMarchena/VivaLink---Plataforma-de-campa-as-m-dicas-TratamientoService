@@ -6,7 +6,6 @@ import java.util.List;
 import dao.TratamientoDao;
 import factory.TratamientoDaoFactory;
 import modelo.Tratamiento;
-import modelo.EntidadDeSalud;
 
 /**
  *
@@ -16,8 +15,8 @@ public class TratamientoRepository {
     private final TratamientoDao tratamientoDao;
 
     // Constructor que inicializa el Dao dependiendo del tipo de base de datos
-    public TratamientoRepository(String tipoDb) throws SQLException {
-        tratamientoDao = TratamientoDaoFactory.dao(tipoDb);
+    public TratamientoRepository() throws SQLException {
+        tratamientoDao = TratamientoDaoFactory.dao("postgres");
     }
 
     // Buscar un tratamiento por ID
@@ -31,23 +30,23 @@ public class TratamientoRepository {
     }
 
     // Guardar un tratamiento en la base de datos
-    public void guardarTratamiento(EntidadDeSalud entidad, String tipo) {
-        tratamientoDao.guardar(entidad, tipo);
+    public void guardarTratamiento(Tratamiento tratamiento) {
+        tratamientoDao.guardar(tratamiento);
     }
 
     // Buscar tratamientos por nombre
     public List<Tratamiento> buscarTratamientosPorNombre(String tipo) {
-        return tratamientoDao.buscarTratamientoPorSuNombre(tipo);
+        return tratamientoDao.buscarTratamientoPorDescripcion(tipo);
     }
 
     // Listar todos los tratamientos
     public List<Tratamiento> listarTodosLosTratamientos() {
-        return tratamientoDao.listarTodosLosTratamietnos();
+        return tratamientoDao.listarTodosLosTratamientos();
     }
 
     // Actualizar un tratamiento en la base de datos
-    public void actualizarTratamiento(int id, Tratamiento tratamiento, String tipo) {
-        tratamientoDao.actualizarTratamiento(id, tratamiento, tipo);
+    public void actualizarTratamiento(int id, Tratamiento tratamiento) {
+        tratamientoDao.actualizarTratamiento(id, tratamiento);
     }
 
     // Eliminar un tratamiento de la base de datos
